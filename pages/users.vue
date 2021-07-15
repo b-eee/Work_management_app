@@ -12,10 +12,10 @@
         <v-row>
           <v-col cols="12">
             <v-data-table :headers="headers" :items="items">
-              <template #[`item.edit`]="{ item }">
+              <template #[`item.status`]="{ item }">
                 <v-menu offset-y>
                   <template #activator="{ on, attrs }">
-                    <img src="/edit.png" v-bind="attrs" v-on="on" />
+                    <span v-bind="attrs" v-on="on">{{item.status}}</span>
                   </template>
                   <v-list>
                     <v-list-item v-if="item.status === 'suspended'">
@@ -127,11 +127,6 @@ export default Vue.extend({
         {
           text: 'status',
           value: 'status',
-        },
-        {
-          text: '編集',
-          value: 'edit',
-          sortable: false,
         },
       ],
       isLoading: true,

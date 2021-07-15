@@ -15,12 +15,15 @@
           >
         </div>
         <v-row class="mt-12">
-          <v-col :cols="!detailView ? 12 : 7">
+          <v-col :cols="!detailView ? 12 : 6">
             <v-data-table
               :headers="headers"
               :items="items"
               :search="search"
               @click:row="showDetailView"
+              :footer-props="{
+                'items-per-page-options': itemPerPage
+              }"
             >
               <template v-slot:top>
                 <v-text-field
@@ -31,26 +34,28 @@
               </template>
             </v-data-table>
           </v-col>
-          <v-col v-if="detailView" cols="5">
+          <v-col v-if="detailView" cols="6">
             <v-card elevation="4">
               <v-row class="pa-4">
-                <v-col col="2" offset="7">
-                  <v-icon class="mr-1" @click="edit = true">mdi-pencil</v-icon>
+                <v-col col="2" offset="10">
                   <v-icon class="mr-1" @click="deleteModal = true"
                     >mdi-delete</v-icon
                   >
                   <v-icon @click="detailView = false">mdi-close</v-icon>
                 </v-col>
               </v-row>
-              <div class="pa-4" v-if="!edit">
-                <p class="text-h6">{{ nowItem.work_title }}</p>
-                <p>担当者： {{ nowItem.viewAssignee }}</p>
-                <p>作成者： {{ nowItem.creator }}</p>
-                <p>カテゴリー： {{ nowItem.viewCategory }}</p>
-                <p>ステータス： {{ nowItem.status }}</p>
-                <p>期限： {{ nowItem.deadline }}</p>
-              </div>
-              <div class="pa-4" v-else>
+              <div class="pa-4">
+                <div class="d-flex">
+                  <div
+                    class="status"
+                    v-for="(val, key) in status"
+                    :key="key"
+                    @click="nowItem.status = val.value"
+                    :class="`${val.value === nowItem.status ? 'active' : ''}`"
+                  >
+                    {{ val.text }}
+                  </div>
+                </div>
                 <v-text-field
                   v-model="nowItem.work_title"
                   label="タイトル"
@@ -68,13 +73,6 @@
                   :items="categories"
                   item-text="value"
                   item-value="option_id"
-                ></v-select>
-                <v-select
-                  v-model="nowItem.status"
-                  label="ステータス"
-                  :items="status"
-                  item-text="text"
-                  item-value="value"
                 ></v-select>
                 <v-text-field
                   v-model="nowItem.deadline"
@@ -241,12 +239,12 @@ export type DataType = {
   search: string;
   detailView: boolean;
   nowItem: NewWork;
-  edit: boolean;
   createModal: boolean;
   newWork: NewWork;
   users: [];
   categories: [];
   deleteModal: boolean;
+  itemPerPage: object;
 };
 
 export default Vue.extend({
@@ -312,7 +310,6 @@ export default Vue.extend({
       statusModal: false,
       detailView: false,
       nowItem: {},
-      edit: false,
       createModal: false,
       newWork: {
         work_title: "",
@@ -322,7 +319,8 @@ export default Vue.extend({
       },
       users: [],
       categories: [],
-      deleteModal: false
+      deleteModal: false,
+      itemPerPage: [10, 20, 30, -1],
     } as DataType;
   },
 
@@ -371,7 +369,6 @@ export default Vue.extend({
         )
         .then(() => {
           this.detailView = false;
-          this.edit = false;
           this.getWorkData();
         })
         .catch(err => {
@@ -482,3 +479,60 @@ export default Vue.extend({
   }
 });
 </script>
+
+<style scoped>
+.status {
+  background: #d6d6d6;
+  width: 80px;
+  text-align: center;
+  height: 30px;
+  font-size: 12px;
+  position: relative;
+  padding-top: 5px;
+}
+
+.status:before {
+  content: " ";
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid #d6d6d6;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  position: absolute;
+  right: -6%;
+  top: 0%;
+  z-index: 1;
+}
+
+.status:after {
+  content: " ";
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid #fff;
+  border-top: 15px solid transparent;
+  border-bottom: 15px solid transparent;
+  position: absolute;
+  right: 92%;
+  top: 0%;
+}
+
+.status:first-child:after {
+  display: none;
+}
+
+.status:last-child:before {
+  display: none;
+}
+
+.active {
+  background: #1976d2;
+  color: #fff;
+}
+
+.active:before {
+  border-left: 5px solid #1976d2;
+}
+
+</style>
