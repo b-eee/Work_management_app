@@ -15,7 +15,13 @@
               <template #[`item.status`]="{ item }">
                 <v-menu offset-y>
                   <template #activator="{ on, attrs }">
-                    <span v-bind="attrs" v-on="on">{{item.status}}</span>
+                    <span
+                      :style="`background: ${btnColor[item.status]}`"
+                      class="pa-1 rounded"
+                      v-bind="attrs"
+                      v-on="on"
+                      >{{ item.status }}</span
+                    >
                   </template>
                   <v-list>
                     <v-list-item v-if="item.status === 'suspended'">
@@ -94,6 +100,11 @@ export type detailUser = {
   i_id: string
 }
 
+export type btnColor = {
+  active: string
+  suspended: string
+}
+
 export type DataType = {
   headers: headers[]
   items: detailUser[]
@@ -103,6 +114,7 @@ export type DataType = {
   statusModal: boolean
   isLoading: boolean
   itemLength: number
+  btnColor: btnColor
 }
 
 export default Vue.extend({
@@ -145,6 +157,10 @@ export default Vue.extend({
       userData: {},
       userStatus: '',
       statusModal: false,
+      btnColor: {
+        active: '#82b1ff',
+        suspended: '#a5cdb6',
+      }
     } as DataType
   },
 

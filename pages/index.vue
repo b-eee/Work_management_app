@@ -1,19 +1,31 @@
 <template>
   <div>
     <v-row justify="center">
-      <v-col cols="4">
+      <v-col cols="3">
         <Doughnuts :chart-data="chartData"></Doughnuts>
       </v-col>
-      <v-col cols="4">
+      <v-col cols="3">
         <LineChart></LineChart>
+      </v-col>
+      <v-col cols="3">
+        <img style="width: 95%" src="../static/sample-img1.png" />
+      </v-col>
+      <v-col cols="3">
+        <v-date-picker></v-date-picker>
       </v-col>
     </v-row>
     <v-row justify="center" align="center">
-      <v-col cols="4">
+      <v-col cols="3">
+        <img style="width: 100%;" src="../static/sample-img2.png" />
+      </v-col>
+      <v-col cols="3">
         <Bar></Bar>
       </v-col>
-      <v-col cols="4">
+      <v-col cols="3">
         <Radar></Radar>
+      </v-col>
+      <v-col cols="3">
+        <v-list-item-avatar tile size="250" color="grey"></v-list-item-avatar>
       </v-col>
     </v-row>
   </div>
@@ -60,3 +72,9 @@ export default Vue.extend({
   }
 });
 </script>
+
+<style>
+.v-picker__title .v-date-picker-title {
+  line-height: 0;
+}
+</style>

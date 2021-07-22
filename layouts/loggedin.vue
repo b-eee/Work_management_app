@@ -10,6 +10,12 @@
     >
       <v-list>
         <v-toolbar-title
+          v-if="miniVariant"
+          class="text-center pt-4 pb-4 blue-grey lighten-5"
+          v-text="'W'"
+        />
+        <v-toolbar-title
+          v-else
           class="text-center pt-4 pb-4 blue-grey lighten-5"
           v-text="title"
         />
@@ -64,7 +70,7 @@
       </div>
     </v-main>
     <v-footer :absolute="!fixed" app>
-      <span>&copy; {{ new Date().getFullYear() }}</span>
+      <span>&copy; Copyright 2021 Hexabase, Inc.</span>
     </v-footer>
 
     <v-dialog v-model="changePasswordModal" width="680" persistent>
@@ -119,7 +125,7 @@ export default Vue.extend({
       miniVariant: false,
       right: true,
       rightDrawer: false,
-      title: "work admin sample",
+      title: "Work admin sample",
       changePasswordModal: false,
       userModal: false
     };

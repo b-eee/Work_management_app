@@ -32,6 +32,22 @@
                   class="mx-4"
                 ></v-text-field>
               </template>
+              <!-- <template #[`item.status`]="{ item }">
+                <v-menu offset-y>
+                  <template #activator="{ on, attrs }">
+                    <span v-bind="attrs" v-on="on">{{item.status}}</span>
+                  </template>
+                  <v-list>
+                    <v-list-item>
+                      <span v-if="!item.status === 'new'" @click="changeStatus('new')"> newにする </span>
+                      <span v-if="!item.status === 'assigned'" @click="changeStatus('assigned')"> assignedにする </span>
+                      <span v-if="!item.status === 'in_progress'" @click="changeStatus('in_progress')"> in progressにする </span>
+                      <span v-if="!item.status === 'in_review'" @click="changeStatus('in_review')"> in_recviewにする </span>
+                      <span v-if="!item.status === 'close'" @click="changeStatus('close')"> closeにする </span>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </template> -->
             </v-data-table>
           </v-col>
           <v-col v-if="detailView" cols="6">
@@ -50,7 +66,6 @@
                     class="status"
                     v-for="(val, key) in status"
                     :key="key"
-                    @click="nowItem.status = val.value"
                     :class="`${val.value === nowItem.status ? 'active' : ''}`"
                   >
                     {{ val.text }}
@@ -455,7 +470,7 @@ export default Vue.extend({
       this.$axios
         .$get("applications/work_management/datastores/works/items/conditions")
         .then(data => {
-          this.categories = data.result[1].options;
+          this.categories = data.result[2].options;
         })
         .catch(err => {
           console.log(err);
@@ -464,17 +479,23 @@ export default Vue.extend({
 
     showDetailView(item: any) {
       this.nowItem = JSON.parse(JSON.stringify(item));
-      const userIndex = this.users.findIndex(
-        u => u.username == [item.assignee]
+      const userIndex = Object.keys(this.users).findIndex(
+        u => this.users[u].username == [item.assignee]
       );
       this.nowItem.assignee = this.users[userIndex].u_id;
-      const categoryIndex = this.categories.findIndex(
-        u => u.value == [item.category]
+      const categoryIndex = Object.keys(this.categories).findIndex(
+        u => this.categories[u].value == [item.category]
       );
+      console.log(categoryIndex)
       this.nowItem.category = this.categories[categoryIndex].option_id;
       this.nowItem.viewCategory = this.categories[categoryIndex].value;
       this.nowItem.viewAssignee = this.users[userIndex].username;
       this.detailView = true;
+    },
+
+    changeStatus(status: string) {
+      this.nowItem.status = status
+      this.updateWork()
     }
   }
 });
