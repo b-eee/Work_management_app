@@ -28,26 +28,52 @@
               <template v-slot:top>
                 <v-text-field
                   v-model="search"
-                  label="Search (UPPER CASE ONLY)"
-                  class="mx-4"
+                  append-icon="mdi-magnify"
+                  label="Search"
+                  single-line
+                  hide-details
                 ></v-text-field>
               </template>
-              <!-- <template #[`item.status`]="{ item }">
+              <template #[`item.status`]="{ item }">
                 <v-menu offset-y>
                   <template #activator="{ on, attrs }">
-                    <span v-bind="attrs" v-on="on">{{item.status}}</span>
+                    <span
+                      v-bind="attrs"
+                      v-on="on"
+                      :style="`background: ${btnColor[item.status]}`"
+                      class="pa-1 rounded"
+                      >{{ item.status }}</span
+                    >
                   </template>
                   <v-list>
-                    <v-list-item>
-                      <span v-if="!item.status === 'new'" @click="changeStatus('new')"> newにする </span>
-                      <span v-if="!item.status === 'assigned'" @click="changeStatus('assigned')"> assignedにする </span>
-                      <span v-if="!item.status === 'in_progress'" @click="changeStatus('in_progress')"> in progressにする </span>
-                      <span v-if="!item.status === 'in_review'" @click="changeStatus('in_review')"> in_recviewにする </span>
-                      <span v-if="!item.status === 'close'" @click="changeStatus('close')"> closeにする </span>
+                    <v-list-item v-if="item.status !== 'new'">
+                      <span @click="changeStatus('new', item)">
+                        newにする
+                      </span>
+                    </v-list-item>
+                    <v-list-item v-if="item.status !== 'assigned'">
+                      <span @click="changeStatus('assigned', item)">
+                        assignedにする
+                      </span>
+                    </v-list-item>
+                    <v-list-item v-if="item.status !== 'in progress'">
+                      <span @click="changeStatus('in progress', item)">
+                        in progressにする
+                      </span>
+                    </v-list-item>
+                    <v-list-item v-if="item.status !== 'in review'">
+                      <span @click="changeStatus('in review', item)">
+                        in_recviewにする
+                      </span>
+                    </v-list-item>
+                    <v-list-item v-if="item.status !== 'close'">
+                      <span @click="changeStatus('close', item)">
+                        closeにする
+                      </span>
                     </v-list-item>
                   </v-list>
                 </v-menu>
-              </template> -->
+              </template>
             </v-data-table>
           </v-col>
           <v-col v-if="detailView" cols="6">
@@ -233,13 +259,36 @@ export type detailUser = {
   i_id: string;
 };
 
-export type NewWork = {
+export type users = {
+  username: string;
+  u_id: string;
+  id: string;
+};
+
+export type categories = {
+  option_id: string;
+  value: string;
+};
+
+export type itemData = {
   work_title: string;
   assignee: string;
   creator: string;
   category: string;
   status: string;
   deadline: string;
+  i_id: string;
+  status_id: string;
+  viewCategory: string;
+  viewAssignee: string;
+};
+
+export type btnColor = {
+  new: string;
+  assigned: string;
+  "in progress": string;
+  "in review": string;
+  closed: string;
 };
 
 export type DataType = {
@@ -253,13 +302,14 @@ export type DataType = {
   itemLength: number;
   search: string;
   detailView: boolean;
-  nowItem: NewWork;
+  nowItem: itemData;
   createModal: boolean;
-  newWork: NewWork;
-  users: [];
-  categories: [];
+  newWork: itemData;
+  users: users[];
+  categories: categories[];
   deleteModal: boolean;
   itemPerPage: object;
+  btnColor: btnColor;
 };
 
 export default Vue.extend({
@@ -332,10 +382,17 @@ export default Vue.extend({
         category: "",
         deadline: ""
       },
-      users: [],
-      categories: [],
+      users: [{}],
+      categories: [{}],
       deleteModal: false,
       itemPerPage: [10, 20, 30, -1],
+      btnColor: {
+        new: "#82b1ff",
+        assigned: "#a5cdb6",
+        "in review": "#50d0d0",
+        "in progress": "#788bc5",
+        closed: "#e43b80"
+      }
     } as DataType;
   },
 
@@ -477,25 +534,27 @@ export default Vue.extend({
         });
     },
 
-    showDetailView(item: any) {
-      this.nowItem = JSON.parse(JSON.stringify(item));
-      const userIndex = Object.keys(this.users).findIndex(
-        u => this.users[u].username == [item.assignee]
-      );
-      this.nowItem.assignee = this.users[userIndex].u_id;
-      const categoryIndex = Object.keys(this.categories).findIndex(
-        u => this.categories[u].value == [item.category]
-      );
-      console.log(categoryIndex)
-      this.nowItem.category = this.categories[categoryIndex].option_id;
-      this.nowItem.viewCategory = this.categories[categoryIndex].value;
-      this.nowItem.viewAssignee = this.users[userIndex].username;
+    showDetailView(item: itemData) {
+      this.selectNowItem(item);
       this.detailView = true;
     },
 
-    changeStatus(status: string) {
-      this.nowItem.status = status
-      this.updateWork()
+    selectNowItem(item: itemData) {
+      this.nowItem = JSON.parse(JSON.stringify(item));
+      // @ts-ignore
+      const userIndex: number = Object.keys(this.users).findIndex((u: number) => {return this.users[u].username == [item.assignee]});
+      this.nowItem.assignee = this.users[userIndex].u_id;
+      // @ts-ignore
+      const categoryIndex: number = Object.keys(this.categories).findIndex((u: number) => {return this.categories[u].value == [item.category]});
+      this.nowItem.category = this.categories[categoryIndex].option_id;
+      this.nowItem.viewCategory = this.categories[categoryIndex].value;
+      this.nowItem.viewAssignee = this.users[userIndex].username;
+    },
+
+    changeStatus(status: string, item: itemData) {
+      this.selectNowItem(item);
+      this.nowItem.status = status;
+      this.updateWork();
     }
   }
 });
@@ -555,5 +614,4 @@ export default Vue.extend({
 .active:before {
   border-left: 5px solid #1976d2;
 }
-
 </style>

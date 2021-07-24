@@ -14,6 +14,7 @@ export default Vue.extend({
   },
 
   mounted() {
+    // @ts-ignore
     this.renderChart(
       {
         labels: [
