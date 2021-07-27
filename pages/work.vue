@@ -15,7 +15,7 @@
           >
         </div>
         <v-row class="mt-12">
-          <v-col :cols="!detailView ? 12 : 6">
+          <v-col :cols="!detailView ? 12 : 8">
             <v-data-table
               :headers="headers"
               :items="items"
@@ -76,10 +76,10 @@
               </template>
             </v-data-table>
           </v-col>
-          <v-col v-if="detailView" cols="6">
+          <v-col v-if="detailView" cols="4">
             <v-card elevation="4">
               <v-row class="pa-4">
-                <v-col col="2" offset="10">
+                <v-col col="3" offset="9">
                   <v-icon class="mr-1" @click="deleteModal = true"
                     >mdi-delete</v-icon
                   >
