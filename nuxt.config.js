@@ -20,8 +20,7 @@ export default {
 
   env: {
     apiKey: process.env.API_KEY,
-    baseUrl: process.env.BASE_URL,
-    mapApiKey: process.env.MAP_API_KEY
+    baseUrl: process.env.BASE_URL
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
