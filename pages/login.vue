@@ -433,6 +433,7 @@ export default Vue.extend({
       this.$axios
         .$post(`workspaces/${id}/select`)
         .then(() => {
+          this.$cookies.set("workspace_id", id);
           this.$router.push("/");
         })
         .catch(err => {

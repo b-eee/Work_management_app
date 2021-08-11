@@ -242,6 +242,7 @@
 
 <script lang="ts">
 import Vue from "vue";
+import NuxtLogoVue from "~/components/NuxtLogo.vue";
 
 export type headers = {
   text: string;
@@ -514,9 +515,12 @@ export default Vue.extend({
 
     getUserData() {
       this.$axios
-        .$get("workspaces/60b59b11ccd0a76131b0cef2/users")
+        .$get(`workspaces/${this.$cookies.get('workspace_id')}/users`)
         .then(data => {
-          this.users = data["60b59b11ccd0a76131b0cef3"];
+          const userData = Object.keys(data).map(x => {
+            return data[x]
+          })
+          this.users = userData[0]
         })
         .catch(err => {
           console.log(err);
