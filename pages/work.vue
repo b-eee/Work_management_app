@@ -40,7 +40,7 @@
                     <span
                       v-bind="attrs"
                       v-on="on"
-                      :style="`background: ${btnColor[item.status]}`"
+                      :style="`color:white; background: ${btnColor[item.status]}`"
                       class="pa-1 rounded"
                       >{{ item.status }}</span
                     >
@@ -388,11 +388,11 @@ export default Vue.extend({
       deleteModal: false,
       itemPerPage: [10, 20, 30, -1],
       btnColor: {
-        new: "#82b1ff",
-        assigned: "#a5cdb6",
-        "in review": "#50d0d0",
-        "in progress": "#788bc5",
-        closed: "#e43b80"
+        new: "#81D4FA",
+        assigned: "#039BE5",
+        "in review": "#01579B",
+        "in progress": "#00ACC1",
+        closed: "#006064"
       }
     } as DataType;
   },
