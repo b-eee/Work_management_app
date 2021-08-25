@@ -1,5 +1,8 @@
 # work_management_app
 
+これは、Hexabaseのフロントエンドプログラムに利用できる、管理画面／ダッシュボードのサンプルプログラムです。サイドメニューから複数のページを切り替えできます。
+
+
 ## Build Setup
 
 ```bash
@@ -18,6 +21,14 @@ $ yarn generate
 ```
 
 For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
+
+
+## License
+
+MIT License
+
+Please see LICENSE file.
+
 
 ## Special Directories
 
