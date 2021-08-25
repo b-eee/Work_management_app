@@ -98,7 +98,7 @@ export default Vue.extend({
   data() {
     return {
       clipped: false,
-      drawer: false,
+      drawer: true,
       fixed: false,
       items: [
         {
