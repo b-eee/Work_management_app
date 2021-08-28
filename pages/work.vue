@@ -42,33 +42,32 @@
                       v-on="on"
                       :style="`background: ${btnColor[item.status]}`"
                       class="pa-1 rounded"
-                      >{{ item.status }}</span
+                      >{{ status[item.status].text }}</span
                     >
                   </template>
                   <v-list>
-                    <v-list-item v-if="item.status !== 'new'">
-                      <span @click="changeStatus('new', item)">
-                        newにする
+                    <v-list-item v-if="status[item.status].moveAction">
+                      <span
+                        @click="
+                          changeStatus(
+                            status[item.status].moveAction,
+                            item.i_id
+                          )
+                        "
+                      >
+                        <v-icon>mdi-arrow-right-box</v-icon> {{ status[item.status].moveText }}
                       </span>
                     </v-list-item>
-                    <v-list-item v-if="item.status !== 'assigned'">
-                      <span @click="changeStatus('assigned', item)">
-                        assignedにする
-                      </span>
-                    </v-list-item>
-                    <v-list-item v-if="item.status !== 'in progress'">
-                      <span @click="changeStatus('in progress', item)">
-                        in progressにする
-                      </span>
-                    </v-list-item>
-                    <v-list-item v-if="item.status !== 'in review'">
-                      <span @click="changeStatus('in review', item)">
-                        in_recviewにする
-                      </span>
-                    </v-list-item>
-                    <v-list-item v-if="item.status !== 'close'">
-                      <span @click="changeStatus('close', item)">
-                        closeにする
+                    <v-list-item v-if="status[item.status].backAction">
+                      <span
+                        @click="
+                          changeStatus(
+                            status[item.status].backAction,
+                            item.i_id
+                          )
+                        "
+                      >
+                        <v-icon>mdi-arrow-left-box</v-icon> {{ status[item.status].backText }}
                       </span>
                     </v-list-item>
                   </v-list>
@@ -296,7 +295,7 @@ export type DataType = {
   headers: headers[];
   items: detailUser[];
   workData: workData;
-  status: headers[];
+  status: object;
   userStatus: string;
   statusModal: boolean;
   isLoading: boolean;
@@ -349,28 +348,44 @@ export default Vue.extend({
       items: {},
       itemLength: 0,
       search: "",
-      status: [
-        {
+      status: {
+        new: {
           value: "new",
-          text: "new"
+          text: "新規",
+          moveAction: "MoveToAssigned",
+          moveText: "受付中にする"
         },
-        {
+        assigned: {
           value: "assigned",
-          text: "assigned"
+          text: "受付中",
+          moveAction: "MoveToInProgress",
+          backAction: "BackToNew",
+          moveText: "作業中にする",
+          backText: "新規に戻す"
         },
-        {
+        "in progress": {
           value: "in progress",
-          text: "in_progress"
+          text: "作業中",
+          moveAction: "MoveToInReview",
+          backAction: "BackToAssigned",
+          moveText: "確認中にする",
+          backText: "受付中に戻す"
         },
-        {
+        "in review": {
           value: "in review",
-          text: "in_review"
+          text: "確認中",
+          moveAction: "MoveToClosed",
+          backAction: "BackToInProgress",
+          moveText: "完了にする",
+          backText: "作業中に戻す"
         },
-        {
+        closed: {
           value: "close",
-          text: "close"
+          text: "完了",
+          backAction: "BackToInReview",
+          backText: "確認中に戻す"
         }
-      ],
+      },
       workData: {},
       userStatus: "",
       statusModal: false,
@@ -416,24 +431,6 @@ export default Vue.extend({
         return_item_result: true,
         action_id: ""
       };
-
-      switch (this.nowItem.status) {
-        case "new":
-          items.action_id = "new";
-          break;
-        case "assigned":
-          items.action_id = "assigned";
-          break;
-        case "in progress":
-          items.action_id = "in_progress";
-          break;
-        case "in review":
-          items.action_id = "in_review";
-          break;
-        case "close":
-          items.action_id = "close";
-          break;
-      }
 
       this.$axios
         .$post(
@@ -515,12 +512,12 @@ export default Vue.extend({
 
     getUserData() {
       this.$axios
-        .$get(`workspaces/${this.$cookies.get('workspace_id')}/users`)
+        .$get(`workspaces/${this.$cookies.get("workspace_id")}/users`)
         .then(data => {
           const userData = Object.keys(data).map(x => {
-            return data[x]
-          })
-          this.users = userData[0]
+            return data[x];
+          });
+          this.users = userData[0];
         })
         .catch(err => {
           console.log(err);
@@ -546,19 +543,38 @@ export default Vue.extend({
     selectNowItem(item: itemData) {
       this.nowItem = JSON.parse(JSON.stringify(item));
       // @ts-ignore
-      const userIndex: number = Object.keys(this.users).findIndex((u: number) => {return this.users[u].username == [item.assignee]});
+      const userIndex: number = Object.keys(this.users).findIndex(
+        (u: number) => {
+          return this.users[u].username == [item.assignee];
+        }
+      );
       this.nowItem.assignee = this.users[userIndex].u_id;
       // @ts-ignore
-      const categoryIndex: number = Object.keys(this.categories).findIndex((u: number) => {return this.categories[u].value == [item.category]});
+      const categoryIndex: number = Object.keys(this.categories).findIndex(
+        (u: number) => {
+          return this.categories[u].value == [item.category];
+        }
+      );
       this.nowItem.category = this.categories[categoryIndex].option_id;
       this.nowItem.viewCategory = this.categories[categoryIndex].value;
       this.nowItem.viewAssignee = this.users[userIndex].username;
     },
 
-    changeStatus(status: string, item: itemData) {
-      this.selectNowItem(item);
-      this.nowItem.status = status;
-      this.updateWork();
+    changeStatus(action_id: string, item_id: string) {
+      this.$axios
+        .$post(
+          `applications/work_management/datastores/works/items/action/${item_id}/${action_id}`,
+          {
+            return_item_result: true,
+            is_force_update: true
+          }
+        )
+        .then(data => {
+          this.getWorkData();
+        })
+        .catch(err => {
+          console.log(err);
+        });
     }
   }
 });
