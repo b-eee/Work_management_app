@@ -434,7 +434,7 @@ export default Vue.extend({
 
       this.$axios
         .$post(
-          `applications/work_management/datastores/works/items/edit/${this.nowItem.i_id}`,
+          `applications/${process.env.app_id}/datastores/works/items/edit/${this.nowItem.i_id}`,
           items
         )
         .then(() => {
@@ -448,7 +448,7 @@ export default Vue.extend({
 
     createWork(): void {
       this.$axios
-        .$post(`applications/work_management/datastores/works/items/new`, {
+        .$post(`applications/${process.env.app_id}/datastores/works/items/new`, {
           item: {
             work_title: this.newWork.work_title,
             category: this.newWork.category,
@@ -471,7 +471,7 @@ export default Vue.extend({
     deleteWork(): void {
       this.$axios
         .$delete(
-          `applications/work_management/datastores/works/items/delete/${this.nowItem.i_id}`,
+          `applications/${process.env.app_id}/datastores/works/items/delete/${this.nowItem.i_id}`,
           {
             data: {}
           }
@@ -488,7 +488,7 @@ export default Vue.extend({
 
     getWorkData(): void {
       this.$axios
-        .$post("applications/work_management/datastores/works/items/search", {
+        .$post(`applications/${process.env.app_id}/datastores/works/items/search`, {
           conditions: [],
           page: 1,
           per_page: 0,
@@ -526,7 +526,7 @@ export default Vue.extend({
 
     getCategory() {
       this.$axios
-        .$get("applications/work_management/datastores/works/items/conditions")
+        .$get(`applications/${process.env.app_id}/datastores/works/items/conditions`)
         .then(data => {
           this.categories = data.result[2].options;
         })

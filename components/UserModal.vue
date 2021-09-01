@@ -92,7 +92,7 @@ export default Vue.extend({
         }
         this.$axios
           .$post(
-            `applications/work_management/datastores/users/items/edit/${this.userData.i_id}`,
+            `applications/${process.env.app_id}/datastores/users/items/edit/${this.userData.i_id}`,
             items
           )
           .then((data) => {
