@@ -187,7 +187,7 @@ export default Vue.extend({
 
       this.$axios
         .$post(
-          `applications/work_management/datastores/users/items/edit/${item.i_id}`,
+          `applications/${process.env.app_id}/datastores/users/items/edit/${item.i_id}`,
           items
         )
         .then(() => {
@@ -201,7 +201,7 @@ export default Vue.extend({
 
     async getUsers() {
       await this.$axios
-        .$post('applications/work_management/datastores/users/items/search', {
+        .$post(`applications/${process.env.app_id}/datastores/users/items/search`, {
           conditions: [],
           page: 1,
           per_page: 0,
@@ -227,7 +227,7 @@ export default Vue.extend({
 
     async test(id: string) {
       const userDetail = await this.$axios
-        .$get(`applications/work_management/datastores/users/items/details/${id}`)
+        .$get(`applications/${process.env.app_id}/datastores/users/items/details/${id}`)
         .then((data) => {
           return data
         })
