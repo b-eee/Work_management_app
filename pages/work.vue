@@ -55,7 +55,8 @@
                           )
                         "
                       >
-                        <v-icon>mdi-arrow-right-box</v-icon> {{ status[item.status].moveText }}
+                        <v-icon>mdi-arrow-right-box</v-icon>
+                        {{ status[item.status].moveText }}
                       </span>
                     </v-list-item>
                     <v-list-item v-if="status[item.status].backAction">
@@ -67,7 +68,8 @@
                           )
                         "
                       >
-                        <v-icon>mdi-arrow-left-box</v-icon> {{ status[item.status].backText }}
+                        <v-icon>mdi-arrow-left-box</v-icon>
+                        {{ status[item.status].backText }}
                       </span>
                     </v-list-item>
                   </v-list>
@@ -448,17 +450,20 @@ export default Vue.extend({
 
     createWork(): void {
       this.$axios
-        .$post(`applications/${process.env.app_id}/datastores/works/items/new`, {
-          item: {
-            work_title: this.newWork.work_title,
-            category: this.newWork.category,
-            assignee: [this.newWork.assignee],
-            creator: [this.$cookies.get("hexaUserData").u_id],
-            deadline: this.newWork.deadline,
-            status: "new"
-          },
-          return_item_result: true
-        })
+        .$post(
+          `applications/${process.env.app_id}/datastores/works/items/new`,
+          {
+            item: {
+              work_title: this.newWork.work_title,
+              category: this.newWork.category,
+              assignee: [this.newWork.assignee],
+              creator: [this.$cookies.get("hexaUserData").u_id],
+              deadline: this.newWork.deadline,
+              status: "new"
+            },
+            return_item_result: true
+          }
+        )
         .then(() => {
           this.createModal = false;
           this.getWorkData();
@@ -488,13 +493,16 @@ export default Vue.extend({
 
     getWorkData(): void {
       this.$axios
-        .$post(`applications/${process.env.app_id}/datastores/works/items/search`, {
-          conditions: [],
-          page: 1,
-          per_page: 0,
-          use_display_id: true,
-          include_links: true
-        })
+        .$post(
+          `applications/${process.env.app_id}/datastores/works/items/search`,
+          {
+            conditions: [],
+            page: 1,
+            per_page: 0,
+            use_display_id: true,
+            include_links: true
+          }
+        )
         .then(data => {
           const items = Object.keys(data.items).map(i => {
             let date = data.items[i].deadline.split("T");
@@ -526,7 +534,9 @@ export default Vue.extend({
 
     getCategory() {
       this.$axios
-        .$get(`applications/${process.env.app_id}/datastores/works/items/conditions`)
+        .$get(
+          `applications/${process.env.app_id}/datastores/works/items/conditions`
+        )
         .then(data => {
           this.categories = data.result[2].options;
         })
@@ -542,16 +552,16 @@ export default Vue.extend({
 
     selectNowItem(item: itemData) {
       this.nowItem = JSON.parse(JSON.stringify(item));
-      // @ts-ignore
       const userIndex: number = Object.keys(this.users).findIndex(
-        (u: number) => {
+        (u: string) => {
+          // @ts-ignore
           return this.users[u].username == [item.assignee];
         }
       );
       this.nowItem.assignee = this.users[userIndex].u_id;
-      // @ts-ignore
       const categoryIndex: number = Object.keys(this.categories).findIndex(
-        (u: number) => {
+        (u: string) => {
+          // @ts-ignore
           return this.categories[u].value == [item.category];
         }
       );
