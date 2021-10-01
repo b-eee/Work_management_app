@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: beee-workmgt
+  labels:
+    app: workmgt
+    component: microservice
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+    targetPort: 3001
+  selector:
+    app: workmgt
+  sessionAffinity: None
+  type: ClusterIP
