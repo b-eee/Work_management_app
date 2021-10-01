@@ -10,7 +10,7 @@ RUN apk add --virtual .gyp \
     && apk del .gyp
 
 RUN npm run build
-RUN npm run export
+RUN npm run generate
 
 FROM nginx:1.19.2-alpine
 COPY docker/app/nginx.conf /etc/nginx/   
