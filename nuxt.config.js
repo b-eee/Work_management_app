@@ -29,7 +29,7 @@ export default {
   css: [],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: ["@/plugins/vee-validate"],
+  plugins: ["@/plugins/vee-validate", "@/plugins/vuetify"],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -46,34 +46,24 @@ export default {
   modules: ["@nuxtjs/axios", "cookie-universal-nuxt"],
 
   axios: {
-    baseURL: process.env.BASE_URL,
+    baseURL: process.env.BASE_URL
   },
 
   // Vuetify module configuration: https://go.nuxtjs.dev/config-vuetify
-  vuetify: {
-    customVariables: ["~/assets/variables.scss"],
-    theme: {
-      dark: false,
-      themes: {
-        dark: {
-          primary: colors.blue.darken2,
-          accent: colors.grey.darken3,
-          secondary: colors.amber.darken3,
-          info: colors.teal.lighten1,
-          warning: colors.amber.base,
-          error: colors.deepOrange.accent4,
-          success: colors.green.accent3
-        }
-      }
-    }
-  },
+  vuetify: {},
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-    transpile: ['vee-validate/dist/rules'],
+    rules: [
+      {
+        test: /\.(eot|svg|ttf|woff|woff2)$/,
+        loader: "file-loader?name=[name].[ext]"
+      }
+    ],
+    transpile: ["vee-validate/dist/rules"]
   },
 
   router: {
-    middleware: 'auth'
+    middleware: "auth"
   }
-}
+};
