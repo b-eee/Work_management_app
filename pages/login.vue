@@ -343,7 +343,6 @@ export default Vue.extend({
           password: this.password
         })
         .then(data => {
-          console.log(data);
           this.$cookies.set("token", data.token);
           this.$axios.defaults.headers.common.Authorization = `Bearer ${this.$cookies.get(
             "token"
