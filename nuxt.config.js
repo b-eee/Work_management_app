@@ -13,7 +13,8 @@ export default {
       { charset: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { hid: "description", name: "description", content: "" },
-      { name: "format-detection", content: "telephone=no" }
+      { name: "format-detection", content: "telephone=no" },
+      { 'http-equiv': "Content-Security-Policy", content: "default-src 'self';style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net/ data:;script-src 'self' 'unsafe-inline' 'unsafe-eval';"}
     ],
     link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }]
   },
