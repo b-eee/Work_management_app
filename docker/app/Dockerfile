@@ -1,9 +1,14 @@
-FROM node:lts-alpine as builder
+FROM node:14-alpine3.12 as builder
 RUN apk update && apk add --no-cache make git nodejs
 WORKDIR /app
 COPY . /app/
-RUN apk add --virtual .gyp \
-        python \
+RUN apk add --no-cache --virtual .gyp \
+        python3 
+
+RUN ln -s /usr/bin/python3 /usr/bin/python && \
+    ln -s /usr/bin/pip3 /usr/bin/pip
+
+RUN apk add --no-cache --virtual .gyp \
         make \
         g++ \
     && npm install \
