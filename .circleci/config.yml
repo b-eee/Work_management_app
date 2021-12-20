@@ -1,8 +1,9 @@
 version: 2.1
 orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
-  aws-eks: circleci/aws-eks@1.1.0
+  aws-eks: circleci/aws-eks@1.2.0
   slack: circleci/slack@4.4.2
+  docker: circleci/docker@2.0.1
 
 jobs:
   notify-on-start:
@@ -32,10 +33,8 @@ workflows:
           filters:
               branches:
                 only:
-                  - deploy
                   - master
-          context: 
-            - slack-secrets
+          context: slack-secrets
 
       - aws-ecr/build-and-push-image:
           requires:
@@ -43,40 +42,12 @@ workflows:
           filters:
               branches:
                 only:
-                  - deploy
                   - master
-          context:
-            - hexa-<< pipeline.git.branch >>
+          context: hexa-master
           repo: beee-workmgt
           dockerfile: docker/app/Dockerfile
           tag: $CIRCLE_SHA1  
 
-      - aws-eks/update-container-image:
-          name: deploy-to-staging
-          requires:
-            - aws-ecr/build-and-push-image
-          filters:
-              branches:
-                only:
-                  - deploy
-          context:
-            - hexa-deploy
-          cluster-name: $EKS_CLUSTER_NAME
-          aws-region: $AWS_REGION
-          resource-name: "deployment/workmgt"
-          container-image-updates: "beee-workmgt=$AWS_ECR_ACCOUNT_URL/beee-workmgt:$CIRCLE_SHA1"
-          get-rollout-status: true
-          watch-rollout-status: true
-          namespace: default
-          record: true
-          
-      - notify-on-success:
-          name: notify-on-success-staging
-          requires:
-            - deploy-to-staging
-          context: 
-            - slack-secrets
-      
       - slack/on-hold:
           context: slack-secrets
           channel: 'deployments'
@@ -101,8 +72,7 @@ workflows:
           name: deploy-to-prod
           requires:
             - hold
-          context:
-            - hexa-master
+          context: hexa-master
           cluster-name: $EKS_CLUSTER_NAME
           aws-region: $AWS_REGION
           resource-name: "deployment/workmgt"
@@ -110,11 +80,76 @@ workflows:
           get-rollout-status: true
           watch-rollout-status: true
           namespace: default
-          record: true
           
       - notify-on-success:
           name: notify-on-success-prod
           requires:
             - deploy-to-prod
-          context: 
-            - slack-secrets
+          context: slack-secrets
+
+#  Build and publish to Docker Hub, update image on EKS
+  build-dockerhub-deploy-eks:
+    jobs:
+      - notify-on-start:
+          filters:
+              branches:
+                only:
+                  - test
+                  - deploy
+          context: slack-secrets
+          
+      - docker/publish:
+          image: $IMG_URL/workmgt
+          dockerfile: docker/app/Dockerfile
+          filters:
+              branches:
+                only:
+                  - test
+                  - deploy
+          context: hexa-<< pipeline.git.branch >>
+
+      - aws-eks/update-container-image:
+          name: deploy-to-staging
+          requires:
+            - docker/publish
+          filters:
+              branches:
+                only:
+                  - deploy
+          context: hexa-deploy
+          cluster-name: $EKS_CLUSTER_NAME
+          aws-region: $AWS_REGION
+          resource-name: "deployment/workmgt"
+          container-image-updates: "beee-workmgt=$IMG_URL/workmgt:$CIRCLE_SHA1"
+          get-rollout-status: true
+          watch-rollout-status: true
+          namespace: default
+      
+      - notify-on-success:
+          name: notify-on-success-staging
+          requires:
+            - deploy-to-staging
+          context: slack-secrets
+            
+      - aws-eks/update-container-image:
+          name: deploy-to-test-ou
+          requires:
+            - docker/publish
+          filters:
+              branches:
+                only:
+                  - test
+          context: hexa-test
+          cluster-name: $EKS_CLUSTER_NAME
+          aws-region: $AWS_REGION
+          resource-name: "deployment/workmgt"
+          container-image-updates: "beee-workmgt=$IMG_URL/workmgt:$CIRCLE_SHA1"
+          get-rollout-status: true
+          watch-rollout-status: true
+          namespace: hexabase
+          
+      - notify-on-success:
+          name: notify-on-success-test-ou
+          requires:
+            - deploy-to-test-ou
+          context: slack-secrets
