@@ -17,7 +17,7 @@ RUN apk add --no-cache --virtual .gyp \
 RUN npm run build
 RUN npm run generate
 
-FROM nginx:1.19.2-alpine
+FROM nginx:1.20-alpine
 COPY docker/app/nginx.conf /etc/nginx/   
 COPY --from=builder /app/dist /var/www   
 EXPOSE 80
