@@ -10,7 +10,7 @@ slack-fail-post-step: &slack-fail-post-step
 
 orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
-  aws-eks: circleci/aws-eks@1.2.0
+  aws-eks: circleci/aws-eks@2.1.2
   slack: circleci/slack@4.4.2
   docker: circleci/docker@2.0.1
 
