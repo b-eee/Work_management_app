@@ -35,6 +35,35 @@ jobs:
           template: success_tagged_deploy_1
           event: pass
 
+  build-docker-image:
+    machine: true
+    resource_class: hexabase-dev/ci-runner
+    steps:
+      - checkout
+      - docker/build:
+          image: $IMG_URL/workmgt
+          dockerfile: docker/app/Dockerfile
+          tag: ${CIRCLE_SHA1:0:7}
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
+            docker push $IMG_URL/workmgt:${CIRCLE_SHA1:0:7}
+
+  gke-update-image:
+    machine: true
+    resource_class: hexabase-dev/ci-runner
+    steps:
+      - gcp-gke/update-kubeconfig-with-credentials:
+          cluster: $EKS_CLUSTER_NAME
+          perform-login: true
+          install-kubectl: true
+      - run:
+         name: Update k8s deployment
+         command: |
+           kubectl set image deployment/workmgt beee-workmgt=$IMG_URL/workmgt:${CIRCLE_SHA1:0:7}
+           kubectl rollout status deployment/workmgt -w
+
 workflows:
   build-dockerhub-deploy-eks:
     jobs:
@@ -47,10 +76,7 @@ workflows:
                   - master
           context: slack-secrets
 
-      - docker/publish:
-          image: $IMG_URL/workmgt
-          dockerfile: docker/app/Dockerfile
-          tag: ${CIRCLE_SHA1:0:7}
+      - build-docker-image:
           filters:
               branches:
                 only:
@@ -63,7 +89,7 @@ workflows:
       - aws-eks/update-container-image:
           name: deploy-to-staging
           requires:
-            - docker/publish
+            - build-docker-image
           filters:
               branches:
                 only:
@@ -87,7 +113,7 @@ workflows:
       - aws-eks/update-container-image:
           name: deploy-to-test-ou
           requires:
-            - docker/publish
+            - build-docker-image
           filters:
               branches:
                 only:
@@ -113,7 +139,7 @@ workflows:
           channel: 'deployments'
           mentions: '<@U0PKAAQBB>, <@U0ADZSDP1>'
           requires:
-            - docker/publish
+            - build-docker-image
           filters:
             branches:
               only:
@@ -122,7 +148,7 @@ workflows:
       - hold:
           type: approval
           requires:
-            - docker/publish
+            - build-docker-image
             - slack/on-hold
           filters:
             branches:
