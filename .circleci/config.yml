@@ -1,18 +1,17 @@
 version: 2.1
 
-slack-fail-post-step: &slack-fail-post-step
-  post-steps:
-    - slack/notify:
-        channel: 'deployments'
-        mentions: '<@U0PKAAQBB>, <@U0ADZSDP1>'
-        event: fail
-        template: basic_fail_1
+discord-notify: &discord-notify
+    post-steps:
+      - discord/status:
+          fail_only: false
+          failure_mentions: '973768753911324692,941150618138079262'
 
 orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
   aws-eks: circleci/aws-eks@2.2.0
   slack: circleci/slack@4.4.2
   docker: circleci/docker@2.0.1
+  discord: teka23/discord@0.0.1
 
 jobs:
   notify-on-start:
@@ -84,7 +83,7 @@ workflows:
                   - deploy
                   - master
           context: hexa-<< pipeline.git.branch >>
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - aws-eks/update-container-image:
           name: deploy-to-staging
@@ -102,7 +101,7 @@ workflows:
           get-rollout-status: true
           watch-rollout-status: true
           namespace: default
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - notify-on-success:
           name: notify-on-success-staging
@@ -126,7 +125,7 @@ workflows:
           get-rollout-status: true
           watch-rollout-status: true
           namespace: hexabase
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - notify-on-success:
           name: notify-on-success-test-ou
@@ -134,10 +133,9 @@ workflows:
             - deploy-to-test-ou
           context: slack-secrets
 
-      - slack/on-hold:
-          context: slack-secrets
-          channel: 'deployments'
-          mentions: '<@U0PKAAQBB>, <@U0ADZSDP1>'
+      - discord/approval-notification:
+          mentions: '973768753911324692,941150618138079262'
+          context: hexa-master
           requires:
             - build-docker-image
           filters:
@@ -149,7 +147,7 @@ workflows:
           type: approval
           requires:
             - build-docker-image
-            - slack/on-hold
+            - discord/approval-notification
           filters:
             branches:
               only:
@@ -167,7 +165,7 @@ workflows:
           get-rollout-status: true
           watch-rollout-status: true
           namespace: default
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - notify-on-success:
           name: notify-on-success-prod
