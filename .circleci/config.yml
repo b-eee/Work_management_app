@@ -19,20 +19,18 @@ jobs:
     docker:
       - image: 'cimg/base:stable'
     steps:
-      - slack/notify:
-          channel: 'deployments'
-          template: basic_success_1
-          event: pass
+      - discord/notify:
+          color: '4383476'
+          message: 'The job on CircleCI has started.'
 
   notify-on-success:
     parallelism: 1
     docker:
       - image: 'cimg/base:stable'
     steps:
-      - slack/notify:
-          channel: 'deployments'
-          template: success_tagged_deploy_1
-          event: pass
+      - discord/notify:
+          color: '4383476'
+          message: 'The job on CircleCI has completed.'
 
   build-docker-image:
     machine: true
@@ -73,7 +71,7 @@ workflows:
                   - test
                   - deploy
                   - master
-          context: slack-secrets
+          context: discord-webhook
 
       - build-docker-image:
           filters:
@@ -107,7 +105,7 @@ workflows:
           name: notify-on-success-staging
           requires:
             - deploy-to-staging
-          context: slack-secrets
+          context: discord-webhook
 
       - aws-eks/update-container-image:
           name: deploy-to-test-ou
@@ -131,7 +129,7 @@ workflows:
           name: notify-on-success-test-ou
           requires:
             - deploy-to-test-ou
-          context: slack-secrets
+          context: discord-webhook
 
       - discord/approval-notification:
           mentions: '973768753911324692,941150618138079262'
@@ -171,4 +169,4 @@ workflows:
           name: notify-on-success-prod
           requires:
             - deploy-to-prod
-          context: slack-secrets
+          context: discord-webhook
