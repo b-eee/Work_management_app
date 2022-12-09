@@ -1,18 +1,17 @@
 version: 2.1
 
-slack-fail-post-step: &slack-fail-post-step
-  post-steps:
-    - slack/notify:
-        channel: 'deployments'
-        mentions: '<@U0PKAAQBB>, <@U0ADZSDP1>'
-        event: fail
-        template: basic_fail_1
+discord-notify: &discord-notify
+    post-steps:
+      - discord/status:
+          fail_only: false
+          failure_mentions: '973768753911324692,941150618138079262'
 
 orbs:
   aws-ecr: circleci/aws-ecr@7.0.0
   aws-eks: circleci/aws-eks@2.2.0
   slack: circleci/slack@4.4.2
   docker: circleci/docker@2.0.1
+  discord: teka23/discord@0.0.1
 
 jobs:
   notify-on-start:
@@ -20,20 +19,18 @@ jobs:
     docker:
       - image: 'cimg/base:stable'
     steps:
-      - slack/notify:
-          channel: 'deployments'
-          template: basic_success_1
-          event: pass
+      - discord/notify:
+          color: '4383476'
+          message: 'The job on CircleCI has started.'
 
   notify-on-success:
     parallelism: 1
     docker:
       - image: 'cimg/base:stable'
     steps:
-      - slack/notify:
-          channel: 'deployments'
-          template: success_tagged_deploy_1
-          event: pass
+      - discord/notify:
+          color: '4383476'
+          message: 'The job on CircleCI has completed.'
 
   build-docker-image:
     machine: true
@@ -74,7 +71,7 @@ workflows:
                   - test
                   - deploy
                   - master
-          context: slack-secrets
+          context: discord-webhook
 
       - build-docker-image:
           filters:
@@ -84,7 +81,7 @@ workflows:
                   - deploy
                   - master
           context: hexa-<< pipeline.git.branch >>
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - aws-eks/update-container-image:
           name: deploy-to-staging
@@ -102,13 +99,13 @@ workflows:
           get-rollout-status: true
           watch-rollout-status: true
           namespace: default
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - notify-on-success:
           name: notify-on-success-staging
           requires:
             - deploy-to-staging
-          context: slack-secrets
+          context: discord-webhook
 
       - aws-eks/update-container-image:
           name: deploy-to-test-ou
@@ -126,18 +123,17 @@ workflows:
           get-rollout-status: true
           watch-rollout-status: true
           namespace: hexabase
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - notify-on-success:
           name: notify-on-success-test-ou
           requires:
             - deploy-to-test-ou
-          context: slack-secrets
+          context: discord-webhook
 
-      - slack/on-hold:
-          context: slack-secrets
-          channel: 'deployments'
-          mentions: '<@U0PKAAQBB>, <@U0ADZSDP1>'
+      - discord/approval-notification:
+          mentions: '973768753911324692,941150618138079262'
+          context: hexa-master
           requires:
             - build-docker-image
           filters:
@@ -149,7 +145,7 @@ workflows:
           type: approval
           requires:
             - build-docker-image
-            - slack/on-hold
+            - discord/approval-notification
           filters:
             branches:
               only:
@@ -167,10 +163,10 @@ workflows:
           get-rollout-status: true
           watch-rollout-status: true
           namespace: default
-          <<: *slack-fail-post-step
+          <<: *discord-notify
 
       - notify-on-success:
           name: notify-on-success-prod
           requires:
             - deploy-to-prod
-          context: slack-secrets
+          context: discord-webhook
