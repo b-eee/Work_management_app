@@ -47,19 +47,29 @@ jobs:
             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_LOGIN" --password-stdin
             docker push $IMG_URL/workmgt:${CIRCLE_SHA1:0:7}
 
-  gke-update-image:
+  oke-deploy:
     machine: true
-    resource_class: hexabase-dev/ci-runner
+    resource_class: hexabase-dev/oke-deploy
     steps:
-      - gcp-gke/update-kubeconfig-with-credentials:
-          cluster: $EKS_CLUSTER_NAME
-          perform-login: true
-          install-kubectl: true
       - run:
-         name: Update k8s deployment
-         command: |
-           kubectl set image deployment/workmgt beee-workmgt=$IMG_URL/workmgt:${CIRCLE_SHA1:0:7}
-           kubectl rollout status deployment/workmgt -w
+          name: Switch cluster
+          command: |
+             kubectl config use-context $OKE_CLUSTER
+      - when:
+          condition:
+            equal: [ staging, << pipeline.git.branch >> ]
+          steps:
+            - run: kubectl config set-context --current --namespace $NAMESPACE_STG
+      - when:
+          condition:
+            equal: [ test, << pipeline.git.branch >> ]
+          steps:
+            - run: kubectl config set-context --current --namespace $NAMESPACE_TEST
+      - run:
+          name: Update image
+          command: |
+             kubectl set image deployment/workmgt workmgt=$IMG_URL/workmgt:${CIRCLE_SHA1:0:7}
+             kubectl rollout status deployment/workmgt -w
 
 workflows:
   build-dockerhub-deploy-eks:
@@ -70,6 +80,7 @@ workflows:
                 only:
                   - test
                   - deploy
+                  - staging
                   - master
           context: discord-webhook
 
@@ -79,6 +90,7 @@ workflows:
                 only:
                   - test
                   - deploy
+                  - staging
                   - master
           context: hexa-<< pipeline.git.branch >>
           <<: *discord-notify
@@ -107,28 +119,22 @@ workflows:
             - deploy-to-staging
           context: discord-webhook
 
-      - aws-eks/update-container-image:
-          name: deploy-to-test-ou
+      - oke-deploy:
+          name: deploy-to-oke
           requires:
             - build-docker-image
           filters:
               branches:
                 only:
                   - test
-          context: hexa-test
-          cluster-name: $EKS_CLUSTER_NAME
-          aws-region: $AWS_REGION
-          resource-name: "deployment/workmgt"
-          container-image-updates: "beee-workmgt=$IMG_URL/workmgt:${CIRCLE_SHA1:0:7}"
-          get-rollout-status: true
-          watch-rollout-status: true
-          namespace: hexabase
+                  - staging
+          context: hexa-<< pipeline.git.branch >>
           <<: *discord-notify
 
       - notify-on-success:
-          name: notify-on-success-test-ou
+          name: notify-on-success-oke
           requires:
-            - deploy-to-test-ou
+            - deploy-to-oke
           context: discord-webhook
 
       - discord/approval-notification:
